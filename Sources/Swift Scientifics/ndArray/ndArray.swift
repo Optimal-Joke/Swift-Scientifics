@@ -76,23 +76,39 @@ extension ndArray {
 extension ndArray {
     // MARK: Static Methods
     
-    /// <#Description#>
-    /// - Parameter buffer: The data buffer whose shape is to be determined.
-    /// - Parameter partialShape:
-    private static func inferShape(buffer: UnsafeMutableBufferPointer<T>, partialShape: [Int]) -> [Int] {
-        var newShape = partialShape
+    /// Return a new zero-filled array of the given shape.
+    /// - Parameter shape: Shape of the new array.
+    /// - Returns: Array of zeros with the given shape.
+    public static func zeros(shape: [Int]) -> ndArray<Self.Element> {
+        let value: Self.Element = 0
         
-        let partialCount = partialShape.product
-        let remainingCount = buffer.count - partialCount
-        
-        newShape.append(remainingCount)
-        
-        return newShape
+        return self.init(shape: shape, repeating: value)
     }
     
-    static func reshape(_ arr: ndArray, _ newShape: [Int]) throws -> [Int] {
-        //        guard arr.nElems == newShape.product else { throw Error }
+    /// Return a new one-filled array of the given shape.
+    /// - Parameter shape: Shape of the new array.
+    /// - Returns: Array of ones with the given shape.
+    public static func ones(shape: [Int]) -> ndArray<Self.Element> {
+        let value: Self.Element = 1
         
-        return []
+        return self.init(shape: shape, repeating: value)
+    }
+    
+    /// Return an array of zeros with the same shape and type of input.
+    /// - Parameter arr: The shape and data-type of `arr` define these same attributes of the returned array.
+    /// - Returns: Array of zeros with the same shape and type as `arr`.
+    public static func zeros(like arr: ndArray<T>) -> ndArray<Self.Element> {
+        let value: Self.Element = 0
+        
+        return self.init(shape: arr.shape, repeating: value)
+    }
+    
+    /// Return an array of ones with the same shape and type of input.
+    /// - Parameter arr: The shape and data-type of `arr` define these same attributes of the returned array.
+    /// - Returns: Array of ones with the same shape and type as `arr`.
+    public static func ones(like arr: ndArray) -> ndArray<Self.Element> {
+        let value: Self.Element = 1
+        
+        return self.init(shape: arr.shape, repeating: value)
     }
 }

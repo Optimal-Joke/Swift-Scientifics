@@ -31,5 +31,31 @@ final class ndArrayTests: XCTestCase {
         
         XCTAssertTrue(array.allSatisfy { $0 == 1 })
     }
+    
+    func testZeros() throws {
+        let array = ndArray<Int>.zeros(shape: [5])
+        
+        XCTAssertTrue(array.allSatisfy { $0 == 0 })
+    }
+    
+    func testOnes() throws {
+        let array = ndArray<Int>.ones(shape: [5])
+        
+        XCTAssertTrue(array.allSatisfy { $0 == 1 })
+    }
+
+    func testZerosLike() throws {
+        let array1 = ndArray<Double>(shape: [3, 4, 5], repeating: 0)
+        let array2 = ndArray.zeros(like: array1)
+        
+        XCTAssertEqual(array1.shape, array2.shape)
+    }
+    
+    func testOnesLike() throws {
+        let array1 = ndArray<Double>(shape: [3, 4, 5], repeating: 1)
+        let array2 = ndArray.ones(like: array1)
+        
+        XCTAssertEqual(array1.shape, array2.shape)
+    }
 }
 
