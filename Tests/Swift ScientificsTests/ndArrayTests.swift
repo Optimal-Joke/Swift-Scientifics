@@ -54,7 +54,7 @@ final class ndArrayTests: XCTestCase {
     func testOnesLike() throws {
         let array1 = ndArray<Double>(shape: [3, 4, 5], repeating: 1)
         let array2 = ndArray.ones(like: array1)
-        
+
         XCTAssertEqual(array1.shape, array2.shape)
     }
 }

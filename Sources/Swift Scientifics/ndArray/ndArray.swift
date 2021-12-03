@@ -68,14 +68,8 @@ extension ndArray: Equatable {
     }
 }
 
-// MARK: - Public Array Properties
+// MARK: - Static Methods
 extension ndArray {
-    public var count: Int { buffer.count }
-}
-
-extension ndArray {
-    // MARK: Static Methods
-    
     /// Return a new zero-filled array of the given shape.
     /// - Parameter shape: Shape of the new array.
     /// - Returns: Array of zeros with the given shape.
