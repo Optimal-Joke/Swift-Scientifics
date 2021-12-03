@@ -32,6 +32,14 @@ final class ndArrayTests: XCTestCase {
         XCTAssertTrue(array.allSatisfy { $0 == 1 })
     }
     
+    func testCreateFromArrayLiteral() throws {
+        let literal: [Double] = [1, 2, 3, 4, 5]
+        let array: ndArray<Double> = [1, 2, 3, 4, 5]
+        
+        XCTAssertTrue(array.elementsEqual(literal))
+        XCTAssertTrue(array.count == literal.count)
+    }
+    
     func testZeros() throws {
         let array = ndArray<Int>.zeros(shape: [5])
         

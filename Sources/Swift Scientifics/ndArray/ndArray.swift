@@ -68,6 +68,12 @@ extension ndArray: Equatable {
     }
 }
 
+extension ndArray: ExpressibleByArrayLiteral {
+    public init(arrayLiteral elements: T...) {
+        self.init(elements)
+    }
+}
+
 // MARK: - Static Methods
 extension ndArray {
     /// Return a new zero-filled array of the given shape.
@@ -106,3 +112,6 @@ extension ndArray {
         return self.init(shape: arr.shape, repeating: value)
     }
 }
+
+// MARK: - Arithmetic
+
