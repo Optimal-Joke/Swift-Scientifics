@@ -36,3 +36,8 @@ extension UnsafeMutableBufferPointer where Element: Numeric {
         return buffer
     }
 }
+
+// MARK: Undefined
+func undefined<T>(_ message: String = "") -> T {
+    fatalError("Undefined: \(message)")
+}
