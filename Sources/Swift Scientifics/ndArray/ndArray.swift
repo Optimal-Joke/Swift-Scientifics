@@ -13,11 +13,7 @@ public struct ndArray<T: Numeric>: MutableCollection {
     /// The dimensions of the array.
     ///
     /// The `shape` property is usually used to get the current dimensions of the array. To change it for an array `arr`, call `arr.reshape`.
-    public private(set) var shape: [Int] {
-        willSet {
-            self.strides = Self.calcStrides(forShape: newValue, itemSize: self.itemSize)
-        }
-    }
+    public private(set) var shape: [Int]
     
     /// Array of bytes to step in each dimension when traversing an array.
     public private(set) var strides: [Int]
@@ -80,6 +76,20 @@ public struct ndArray<T: Numeric>: MutableCollection {
         }
         set(newValue) {
             self.buffer[index] = newValue
+        }
+    }
+    
+    @propertyWrapper struct ArrayIndex {
+        var wrappedValue: Int {
+            didSet {
+                wrappedValue = wrappedValue >= 0 ? wrappedValue : wrappedValue + count
+            }
+        }
+        var count: Int
+        
+        init(wrappedValue: Int, count: Int) {
+            self.wrappedValue = wrappedValue >= 0 ? wrappedValue : wrappedValue + count
+            self.count = count
         }
     }
 }
@@ -149,6 +159,8 @@ extension ndArray {
         }
         
         self.shape = shape
+        
+        self.strides = Self.calcStrides(forShape: shape, itemSize: self.itemSize)
     }
     
     /// <#Description#>
@@ -158,10 +170,19 @@ extension ndArray {
     }
     
     public mutating func swapAxes(axis1: Int, axis2: Int) throws {
-        var newShape = self.shape
-        newShape.swapAt(axis1, axis2)
-        self.shape = newShape
-        self.strides = Self.calcStrides(forShape: newShape, itemSize: self.itemSize)
+        guard (-self.nDim..<self.nDim).contains(axis1) else {
+            throw ArrayShapeError.InvalidAxis(axis: axis1, nDims: self.nDim)
+        }
+        
+        guard (-self.nDim..<self.nDim).contains(axis2) else {
+            throw ArrayShapeError.InvalidAxis(axis: axis2, nDims: self.nDim)
+        }
+        
+        @ArrayIndex(count: self.nDim) var axisA = axis1
+        @ArrayIndex(count: self.nDim) var axisB = axis2
+        
+        self.shape.swapAt(axisA, axisB)
+        self.strides.swapAt(axisA, axisB)
     }
 }
 

@@ -15,6 +15,9 @@ extension ndArray {
         // Throw when more than one dimension in a shape is -1.
         case TooManyUnknownDimensions(count: Int)
         
+        // Throw when an attempt is made to access an axis that doesn't exist.
+        case InvalidAxis(axis: Int, nDims: Int)
+        
         // Throw in all other cases
         case unexpected(code: Int)
         
@@ -24,6 +27,8 @@ extension ndArray {
                 return "Cannot reshape array of size \(size) into shape \(shape)."
             case .TooManyUnknownDimensions(let count):
                 return "May only specify 1 unknown dimension. You specified \(count)."
+            case .InvalidAxis(let axis, let nDims):
+                return "Axis \(axis) does not exist in array of dimension \(nDims)."
             case .unexpected(_):
                 return "An unexpected error occurred."
             }

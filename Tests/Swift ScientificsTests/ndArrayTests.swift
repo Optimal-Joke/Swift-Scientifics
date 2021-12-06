@@ -68,14 +68,18 @@ final class ndArrayTests: XCTestCase {
     
     // MARK: Metadata Configuration
     func testConfigFromInit() throws {
-        let array = ndArray<Int32>(shape: [2, 3, 4], repeating: 0)
+        let array = ndArray(shape: [2, 3, 4], repeating: 0)
         
         XCTAssertEqual(array.shape, [2, 3, 4])
-        XCTAssertEqual(array.strides, [48, 16, 4])
+        XCTAssertEqual(array.strides, [96, 32, 8])
         XCTAssertEqual(array.nDim, 3)
         XCTAssertEqual(array.size, 24)
-        XCTAssertEqual(array.itemSize, 4)
+        XCTAssertEqual(array.itemSize, 8)
     }
+    
+    // MARK: - Axis Manipulation
+    
+    
     
     // MARK: Reshape
     func testSuccessfulReshape1() throws {
@@ -83,6 +87,7 @@ final class ndArrayTests: XCTestCase {
         
         try array.reshape([-1])
         XCTAssertEqual(array.shape, [24])
+        XCTAssertEqual(array.strides, [8])
     }
     
     func testSuccessfulReshape2() throws {
@@ -90,6 +95,7 @@ final class ndArrayTests: XCTestCase {
         
         try array.reshape([-1, 2])
         XCTAssertEqual(array.shape, [12, 2])
+        XCTAssertEqual(array.strides, [16, 8])
     }
     
     func testSuccessfulReshape3() throws {
@@ -97,6 +103,7 @@ final class ndArrayTests: XCTestCase {
         
         try array.reshape([-1, 2, 4])
         XCTAssertEqual(array.shape, [3, 2, 4])
+        XCTAssertEqual(array.strides, [64, 32, 8])
     }
     
     func testSuccessfulReshape4() throws {
@@ -104,6 +111,7 @@ final class ndArrayTests: XCTestCase {
         
         try array.reshape([2, 3, 2, -1])
         XCTAssertEqual(array.shape, [2, 3, 2, 2])
+        XCTAssertEqual(array.strides, [96, 32, 16, 8])
     }
     
     func testFailedReshape1() throws {
@@ -203,6 +211,17 @@ final class ndArrayTests: XCTestCase {
         
         // Verify that our error is equal to what we expect
         XCTAssertEqual(thrownError as? ndArray<Element>.ArrayShapeError, .TooManyUnknownDimensions(count: 2))
+    }
+    
+    // MARK: Swap Axes
+    func testSwapAxes() throws {
+        var array = ndArray<Int8>(shape: [2, 3, 4], repeating: 0)
+        XCTAssertEqual(array.strides, [12, 4, 1])
+        
+        try array.swapAxes(axis1: 0, axis2: -2)
+        
+        XCTAssertEqual(array.shape, [3, 2, 4])
+        XCTAssertEqual(array.strides, [4, 12, 1])
     }
     
     // MARK: Data Manipulation
