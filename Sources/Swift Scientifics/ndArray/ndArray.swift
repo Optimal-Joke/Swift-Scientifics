@@ -8,30 +8,51 @@
 import Foundation
 
 public struct ndArray<T: Numeric>: MutableCollection {
-    var shape: [Int]
     private var buffer: UnsafeMutableBufferPointer<T>
+    
+    /// The dimensions of the array.
+    ///
+    /// The `shape` property is usually used to get the current dimensions of the array. To change it for an array `arr`, call
+    /// `arr.reshape`.
+    public private(set) var shape: [Int]
+    
+    /// Array of bytes to step in each dimension when traversing an array.
+    public private(set) var strides: [Int]
+    
+    /// The number of dimensions in the array.
+    public var nDim: Int { self.shape.count }
+    
+    /// The number of elements in the array.
+    public var size: Int { self.shape.reduce(1, *) }
+    
+    /// The size, in bytes, of each element in the array.
+    public let itemSize: Int = MemoryLayout<T>.size
     
     // MARK: Initializers
     init(shape: [Int]) {
+        self.buffer = UnsafeMutableBufferPointer<T>.allocate(capacity: shape.product)
         self.shape = shape
-        self.buffer = UnsafeMutableBufferPointer<T>.allocate(capacity: shape.reduce(1, *))
+        self.strides = Self.calcStrides(forShape: shape, itemsize: MemoryLayout<T>.size)
     }
     
     init(shape: [Int], repeating val: T) {
-        self.shape = shape
         self.buffer = UnsafeMutableBufferPointer<T>.calloc(count: shape.product, value: val)
+        self.shape = shape
+        self.strides = Self.calcStrides(forShape: shape, itemsize: MemoryLayout<T>.size)
     }
     
     init(buffer: UnsafeMutableBufferPointer<T>) { // TODO: Add ability to pass shape parameter
         self.buffer = buffer
-        self.shape = [1, buffer.count]
+        self.shape = [buffer.count]
+        self.strides = Self.calcStrides(forShape: shape, itemsize: MemoryLayout<T>.size)
     }
     
     init(_ array: [T]) {
         self.buffer = UnsafeMutableBufferPointer<T>.malloc(count: array.count)
         _ = self.buffer.initialize(from: array)
         
-        self.shape = [1, buffer.count]
+        self.shape = [buffer.count]
+        self.strides = Self.calcStrides(forShape: shape, itemsize: MemoryLayout<T>.size)
     }
     
     // MARK: MutableCollection Conformance
@@ -71,6 +92,61 @@ extension ndArray: Equatable {
 extension ndArray: ExpressibleByArrayLiteral {
     public init(arrayLiteral elements: T...) {
         self.init(elements)
+    }
+}
+
+// MARK: - Buffer/View Manipulation
+extension ndArray {
+    
+    /// Calculates the appropriate strides for an array of the given shape and with elements of the given size.
+    ///
+    /// This method should only be called when ``ndarray.reshape`` is called.
+    /// - Parameters:
+    ///   - shape: The shape of the array whose strides are being calculated.
+    ///   - itemsize: The size (in bytes) of each element in the array.
+    /// - Returns: An array of dimension-wise strides.
+    private static func calcStrides(forShape shape: [Int], itemsize: Int) -> [Int] {
+        var strides = Array(repeating: 0, count: shape.count)
+        
+        for i in shape.indices {
+//            guard i != shape.endIndex else { strides[i] = itemsize; break }
+
+            strides[i] = Array(shape[(i+1)...]).product * itemsize
+        }
+        return strides
+    }
+    
+    public mutating func reshape(_ newShape: [Int]) throws {
+        var shape = newShape
+        
+        if let idx = newShape.firstIndex(of: -1) { // handle presence of -1
+            let numUnknownDimensions = newShape.filter({ $0 == -1 }).count
+
+            guard numUnknownDimensions == 1 else {
+                throw ArrayShapeError.TooManyUnknownDimensions(count: numUnknownDimensions)
+            }
+            
+            let otherDimProduct = newShape.product * -1
+            
+            guard self.size.isMultiple(of: otherDimProduct) else {
+                throw ArrayShapeError.InvalidShapeForSize(shape: newShape, size: self.size)
+            }
+            
+            let newDim = self.size / otherDimProduct
+            shape[idx] = newDim
+        }
+                
+        guard self.size == shape.product else {
+            throw ArrayShapeError.InvalidShapeForSize(shape: shape, size: self.size)
+        }
+        
+        self.shape = shape
+        
+        self.strides = Self.calcStrides(forShape: shape, itemsize: self.itemSize)
+    }
+    
+    public static func transpose(_ axes: [Int]?) -> ndArray {
+        undefined("Not implemented")
     }
 }
 
@@ -114,4 +190,6 @@ extension ndArray {
 }
 
 // MARK: - Arithmetic
-
+extension ndArray {
+    // FIXME: Arithmetic operations should only be implemented when array can be reshaped etc.
+}
