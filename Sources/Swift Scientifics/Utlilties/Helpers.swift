@@ -6,7 +6,7 @@
 //
 
 // MARK: Helper Functions
-extension Array where Element == Int {
+extension RandomAccessCollection where Index: Strideable, Indices == CountableRange<Index>, Element == Int {
     var product: Int {
         self.reduce(1, *)
     }

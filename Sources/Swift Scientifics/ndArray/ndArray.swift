@@ -12,9 +12,12 @@ public struct ndArray<T: Numeric>: MutableCollection {
     
     /// The dimensions of the array.
     ///
-    /// The `shape` property is usually used to get the current dimensions of the array. To change it for an array `arr`, call
-    /// `arr.reshape`.
-    public private(set) var shape: [Int]
+    /// The `shape` property is usually used to get the current dimensions of the array. To change it for an array `arr`, call `arr.reshape`.
+    public private(set) var shape: [Int] {
+        willSet {
+            self.strides = Self.calcStrides(forShape: newValue, itemSize: self.itemSize)
+        }
+    }
     
     /// Array of bytes to step in each dimension when traversing an array.
     public private(set) var strides: [Int]
@@ -32,19 +35,19 @@ public struct ndArray<T: Numeric>: MutableCollection {
     init(shape: [Int]) {
         self.buffer = UnsafeMutableBufferPointer<T>.allocate(capacity: shape.product)
         self.shape = shape
-        self.strides = Self.calcStrides(forShape: shape, itemsize: MemoryLayout<T>.size)
+        self.strides = Self.calcStrides(forShape: shape, itemSize: MemoryLayout<T>.size)
     }
     
     init(shape: [Int], repeating val: T) {
         self.buffer = UnsafeMutableBufferPointer<T>.calloc(count: shape.product, value: val)
         self.shape = shape
-        self.strides = Self.calcStrides(forShape: shape, itemsize: MemoryLayout<T>.size)
+        self.strides = Self.calcStrides(forShape: shape, itemSize: MemoryLayout<T>.size)
     }
     
     init(buffer: UnsafeMutableBufferPointer<T>) { // TODO: Add ability to pass shape parameter
         self.buffer = buffer
         self.shape = [buffer.count]
-        self.strides = Self.calcStrides(forShape: shape, itemsize: MemoryLayout<T>.size)
+        self.strides = Self.calcStrides(forShape: shape, itemSize: MemoryLayout<T>.size)
     }
     
     init(_ array: [T]) {
@@ -52,7 +55,7 @@ public struct ndArray<T: Numeric>: MutableCollection {
         _ = self.buffer.initialize(from: array)
         
         self.shape = [buffer.count]
-        self.strides = Self.calcStrides(forShape: shape, itemsize: MemoryLayout<T>.size)
+        self.strides = Self.calcStrides(forShape: shape, itemSize: MemoryLayout<T>.size)
     }
     
     // MARK: MutableCollection Conformance
@@ -100,19 +103,24 @@ extension ndArray {
     
     /// Calculates the appropriate strides for an array of the given shape and with elements of the given size.
     ///
-    /// This method should only be called when ``ndarray.reshape`` is called.
+    /// This method should only be called when ``ndarray.reshape`` is called. It assumes that `shape`
+    /// is a valid shape
     /// - Parameters:
     ///   - shape: The shape of the array whose strides are being calculated.
     ///   - itemsize: The size (in bytes) of each element in the array.
     /// - Returns: An array of dimension-wise strides.
-    private static func calcStrides(forShape shape: [Int], itemsize: Int) -> [Int] {
+    private static func calcStrides(forShape shape: [Int], itemSize: Int) -> [Int] {
         var strides = Array(repeating: 0, count: shape.count)
         
         for i in shape.indices {
-//            guard i != shape.endIndex else { strides[i] = itemsize; break }
-
-            strides[i] = Array(shape[(i+1)...]).product * itemsize
+            guard i > 0 else {
+                strides[i] = shape.product / shape[i] * itemSize
+                continue
+            }
+            
+            strides[i] = shape.product / shape[i] / shape[..<i].product * itemSize
         }
+        
         return strides
     }
     
@@ -141,12 +149,19 @@ extension ndArray {
         }
         
         self.shape = shape
-        
-        self.strides = Self.calcStrides(forShape: shape, itemsize: self.itemSize)
     }
     
-    public static func transpose(_ axes: [Int]?) -> ndArray {
-        undefined("Not implemented")
+    /// <#Description#>
+    /// - Parameter axes: <#axes description#>
+    public mutating func transpose(_ axes: [Int]?) throws {
+//        guard let axes = axes else { }
+    }
+    
+    public mutating func swapAxes(axis1: Int, axis2: Int) throws {
+        var newShape = self.shape
+        newShape.swapAt(axis1, axis2)
+        self.shape = newShape
+        self.strides = Self.calcStrides(forShape: newShape, itemSize: self.itemSize)
     }
 }
 
