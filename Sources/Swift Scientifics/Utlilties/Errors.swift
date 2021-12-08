@@ -7,6 +7,7 @@
 
 import Foundation
 
+// MARK: ndArray
 extension ndArray {
     enum ArrayShapeError: Error, Equatable, CustomStringConvertible {
         // Throw when an invalid shape is used for the size of the array.
@@ -31,6 +32,21 @@ extension ndArray {
                 return "Axis \(axis) does not exist in array of dimension \(nDims)."
             case .unexpected(_):
                 return "An unexpected error occurred."
+            }
+        }
+    }
+}
+
+// MARK: DBSCAN
+extension DBSCAN {
+    enum DBSCANError: Error, Equatable, CustomStringConvertible  {
+        // Throw when `minSamples` is non-positive.
+        case InvalidMinSamples(count: Int)
+        
+        var description: String {
+            switch self {
+            case .InvalidMinSamples(count: let count):
+                return "`minSamples` cannot be \(count). It must be a positive number."
             }
         }
     }
