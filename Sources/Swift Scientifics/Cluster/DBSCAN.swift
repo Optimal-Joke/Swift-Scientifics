@@ -18,10 +18,8 @@ public struct DBSCAN<T: Numeric> {
     /// The number of samples in a neighborhood for a point to be considered as a core point, including the point itself.
     public var minSamples: Int
     
-    public init(epsilon: Double = 0.5, minSamples: Int = 5) throws {
-        guard minSamples > 0 else {
-            throw DBSCANError.InvalidMinSamples(count: minSamples)
-        }
+    public init(epsilon: Double = 0.5, minSamples: Int = 5) {
+        precondition(minSamples > 0, "`minSamples` must be a positive number, not \(minSamples)")
         
         self.epsilon = epsilon
         self.minSamples = minSamples

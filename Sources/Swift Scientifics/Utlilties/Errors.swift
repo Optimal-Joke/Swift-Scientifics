@@ -41,12 +41,11 @@ extension ndArray {
 extension DBSCAN {
     enum DBSCANError: Error, Equatable, CustomStringConvertible  {
         // Throw when `minSamples` is non-positive.
-        case InvalidMinSamples(count: Int)
+//        case InvalidMinSamples(count: Int)
         
         var description: String {
             switch self {
-            case .InvalidMinSamples(count: let count):
-                return "`minSamples` cannot be \(count). It must be a positive number."
+           
             }
         }
     }
