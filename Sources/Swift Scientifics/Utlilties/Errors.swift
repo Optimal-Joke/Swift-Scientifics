@@ -35,6 +35,23 @@ extension ndArray {
             }
         }
     }
+
+    enum IndexError: Error, Equatable, CustomStringConvertible {
+        // Throw when an array is indexed with a value larger than its size.
+        case OutOfBounds(index: Int, size: Int)
+        
+        // Throw in all other cases
+        case unexpected(code: Int)
+        
+        public var description: String {
+            switch self {
+            case .OutOfBounds(let index, let size):
+                return "Index \(index) is out of bounds for array of size \(size)."
+            case .unexpected(_):
+                return "An unexpected error occurred."
+            }
+        }
+    }
 }
 
 // MARK: DBSCAN

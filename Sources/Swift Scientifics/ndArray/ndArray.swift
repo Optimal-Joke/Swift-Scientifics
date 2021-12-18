@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct ndArray<T: Numeric>: MutableCollection {
+public struct ndArray<T: Numeric> {
     private var buffer: UnsafeMutableBufferPointer<T>
     
     /// The dimensions of the array.
@@ -40,11 +40,11 @@ public struct ndArray<T: Numeric>: MutableCollection {
         self.strides = Self.calcStrides(forShape: shape, itemSize: MemoryLayout<T>.size)
     }
     
-    init(buffer: UnsafeMutableBufferPointer<T>) { // TODO: Add ability to pass shape parameter
-        self.buffer = buffer
-        self.shape = [buffer.count]
-        self.strides = Self.calcStrides(forShape: shape, itemSize: MemoryLayout<T>.size)
-    }
+//    init(buffer: UnsafeMutableBufferPointer<T>) { // TODO: Add ability to pass shape parameter
+//        self.buffer = buffer
+//        self.shape = [buffer.count]
+//        self.strides = Self.calcStrides(forShape: shape, itemSize: MemoryLayout<T>.size)
+//    }
     
     init(_ array: [T]) {
         self.buffer = UnsafeMutableBufferPointer<T>.malloc(count: array.count)
@@ -53,8 +53,29 @@ public struct ndArray<T: Numeric>: MutableCollection {
         self.shape = [buffer.count]
         self.strides = Self.calcStrides(forShape: shape, itemSize: MemoryLayout<T>.size)
     }
-    
-    // MARK: MutableCollection Conformance
+}
+
+// MARK: - Multi-Dimensional Indexing
+extension ndArray {
+    /// A property wrapper for an array index that ensures it is positive
+    @propertyWrapper struct IndexWrapped {
+        private var index: Int
+        var maximumValue: Int
+        
+        var wrappedValue: Int {
+            get { return index }
+//            set { index = newValue >= 0 ? newValue : newValue + maximumValue }
+        }
+        
+        init(wrappedValue: Int, maximum: Int) {
+            self.index = wrappedValue >= 0 ? wrappedValue : wrappedValue + maximum
+            self.maximumValue = maximum
+        }
+    }
+}
+
+// MARK: - Public Protocol Conformance
+extension ndArray: MutableCollection {
     public typealias Index = Int
     public typealias Element = T
     
@@ -76,20 +97,6 @@ public struct ndArray<T: Numeric>: MutableCollection {
         }
         set(newValue) {
             self.buffer[index] = newValue
-        }
-    }
-    
-    @propertyWrapper struct ArrayIndex {
-        var wrappedValue: Int {
-            didSet {
-                wrappedValue = wrappedValue >= 0 ? wrappedValue : wrappedValue + count
-            }
-        }
-        var count: Int
-        
-        init(wrappedValue: Int, count: Int) {
-            self.wrappedValue = wrappedValue >= 0 ? wrappedValue : wrappedValue + count
-            self.count = count
         }
     }
 }
@@ -165,9 +172,9 @@ extension ndArray {
     
     /// <#Description#>
     /// - Parameter axes: <#axes description#>
-    public mutating func transpose(_ axes: [Int]?) throws {
-//        guard let axes = axes else { }
-    }
+//    public mutating func transpose(_ axes: [Int]?) throws {
+////        guard let axes = axes else { }
+//    }
     
     public mutating func swapAxes(axis1: Int, axis2: Int) throws {
         guard (-self.nDim..<self.nDim).contains(axis1) else {
@@ -178,8 +185,8 @@ extension ndArray {
             throw ArrayShapeError.InvalidAxis(axis: axis2, nDims: self.nDim)
         }
         
-        @ArrayIndex(count: self.nDim) var axisA = axis1
-        @ArrayIndex(count: self.nDim) var axisB = axis2
+        @IndexWrapped(maximum: self.nDim) var axisA = axis1
+        @IndexWrapped(maximum: self.nDim) var axisB = axis2
         
         self.shape.swapAt(axisA, axisB)
         self.strides.swapAt(axisA, axisB)
