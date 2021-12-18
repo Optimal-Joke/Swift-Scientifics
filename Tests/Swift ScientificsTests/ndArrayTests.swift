@@ -214,7 +214,7 @@ final class ndArrayTests: XCTestCase {
     }
     
     // MARK: Swap Axes
-    func testSwapAxes() throws {
+    func testSwapAxesNegativeIndex() throws {
         var array = ndArray<Int8>(shape: [2, 3, 4], repeating: 0)
         XCTAssertEqual(array.strides, [12, 4, 1])
         
@@ -222,6 +222,46 @@ final class ndArrayTests: XCTestCase {
         
         XCTAssertEqual(array.shape, [3, 2, 4])
         XCTAssertEqual(array.strides, [4, 12, 1])
+    }
+    
+    func testSwapAxesInvalidIndex() throws {
+        typealias Element = Int
+        
+        var array = ndArray<Element>(shape: [2, 3, 4], repeating: 0)
+        
+        var thrownError: Error?
+        
+        // Axis 1
+        
+        // Capture the thrown error using a closure
+        XCTAssertThrowsError(try array.swapAxes(axis1: 0, axis2: 3)) {
+            thrownError = $0
+        }
+        
+        // First we’ll verify that the error is of the right
+        // type, to make debugging easier in case of failures.
+        XCTAssertTrue(
+            thrownError is ndArray<Element>.ArrayShapeError
+        )
+        
+        // Verify that our error is equal to what we expect
+        XCTAssertEqual(thrownError as? ndArray<Element>.ArrayShapeError, .InvalidAxis(axis: 3, nDims: 3))
+        
+        // Axis 2
+        
+        // Capture the thrown error using a closure
+        XCTAssertThrowsError(try array.swapAxes(axis1: 3, axis2: 0)) {
+            thrownError = $0
+        }
+        
+        // First we’ll verify that the error is of the right
+        // type, to make debugging easier in case of failures.
+        XCTAssertTrue(
+            thrownError is ndArray<Element>.ArrayShapeError
+        )
+        
+        // Verify that our error is equal to what we expect
+        XCTAssertEqual(thrownError as? ndArray<Element>.ArrayShapeError, .InvalidAxis(axis: 3, nDims: 3))
     }
     
     // MARK: Data Manipulation
